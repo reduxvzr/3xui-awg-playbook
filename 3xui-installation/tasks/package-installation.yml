@@ -1,0 +1,27 @@
+---
+- name: Install necessary soft
+  ansible.builtin.apt:
+    pkg:
+      - arp-scan
+      - curl
+      - fail2ban
+      - fd-find
+      - fontconfig
+      - git
+      - htop
+      - hwinfo
+      - iftop
+      - iputils-tracepath
+      - ncdu
+      - net-tools
+      - nmap
+      - plocate
+      - sudo
+      - trash-cli
+      - tree
+      - unzip
+      - vim
+      - wget
+      - zsh
+    update_cache: true
+    state: present

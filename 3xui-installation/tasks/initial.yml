@@ -1,0 +1,48 @@
+---
+- name: Add group for user
+  ansible.builtin.group:
+    name: vpsuser
+    state: present
+    gid: 1001
+
+- name: Add home user
+  ansible.builtin.user:
+    name: "{{ home_user }}"
+    shell: /bin/zsh
+    create_home: true
+    uid: 1001
+    groups: vpsuser,sudo
+
+- name: SSH setup
+  block:
+    - name: Copy ssh file
+      ansible.builtin.copy:
+        src: sshd_config
+        dest: /etc/ssh/sshd_config
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Create directory for keys
+      ansible.builtin.file:
+        path: "/home/{{ home_user }}/.ssh"
+        state: directory
+        owner: "{{ home_user }}"
+        group: "{{ home_user }}"
+        mode: "0700"
+      register: ssh_directory
+
+    - name: Copy authorized_keys
+      ansible.builtin.copy:
+        src: authorized_keys
+        dest: "/home/{{ home_user }}/.ssh/authorized_keys"
+        owner: "{{ home_user }}"
+        group: "{{ home_user }}"
+        mode: "0644"
+      register: sshd_config
+      notify: Reload SSH
+
+- name: Remove UFW
+  ansible.builtin.apt:
+    name: ufw
+    state: absent

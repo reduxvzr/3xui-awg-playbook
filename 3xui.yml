@@ -1,0 +1,8 @@
+# Ansible playbook for 3X-UI Panel installation
+---
+- hosts: all
+  become: true
+  remote_user: root
+  gather_facts: false
+  roles:
+    - 3xui-installation

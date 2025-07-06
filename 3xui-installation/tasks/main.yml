@@ -1,0 +1,17 @@
+---
+# tasks file for 3xui-installation
+- name: Install packages
+  tags: install_packages
+  ansible.builtin.import_tasks: package-installation.yml
+
+- name: Initial
+  tags: initial
+  ansible.builtin.import_tasks: initial.yml
+
+- name: Oh My ZSH
+  tags: zsh
+  ansible.builtin.import_tasks: zsh.yml
+
+- name: 3xui
+  tags: 3xui
+  ansible.builtin.import_tasks: 3xui.yml

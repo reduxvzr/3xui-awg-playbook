@@ -1,0 +1,3 @@
+- name: Install 3xui
+  ansible.builtin.shell: bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh)
+  changed_when: false

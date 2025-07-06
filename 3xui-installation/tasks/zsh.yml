@@ -1,0 +1,63 @@
+---
+- name: Install Nerd font
+  ansible.builtin.get_url:
+    url: https://github.com/ryanoasis/nerd-fonts/releases/download/v3.4.0/3270.zip
+    dest: /tmp/nerd_font.zip
+    owner: "{{ home_user }}"
+    group: "{{ home_user }}"
+    mode: "0644"
+
+- name: Create dir for storage fonts
+  ansible.builtin.file:
+    path: /usr/share/fonts
+    state: directory
+    owner: root
+    group: root
+
+- name: Unzip downloaded fonts
+  ansible.builtin.unarchive:
+    src: /tmp/nerd_font.zip
+    dest: /usr/share/fonts
+    remote_src: true
+
+- name: Rebuild the font cache
+  ansible.builtin.command: fc-cache -fvf
+  changed_when: false
+
+- name: Check OMZ folder
+  ansible.builtin.stat:
+    path: "/home/{{home_user}}/.oh-my-zsh"
+  register: omz_folder
+
+- name: Get Oh-My-ZSH
+  become: true
+  become_user: "{{ home_user }}"
+  ansible.builtin.shell: |
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+  register: omz_result
+  when: not omz_folder.stat.exists
+
+- name: OMZ output
+  ansible.builtin.debug:
+    msg: omz_result.stdout
+
+- name: Install Powerlevel10k theme
+  ansible.builtin.git:
+    repo: https://github.com/romkatv/powerlevel10k.git
+    dest: /home/{{ home_user }}/.oh-my-zsh/custom/themes/powerlevel10k
+    update: true
+
+- name: Create zshrc file
+  ansible.builtin.copy:
+    src: /root/.zshrc
+    dest: "/home/{{ home_user }}/.zshrc"
+    owner: "{{ home_user }}"
+    group: "{{ home_user }}"
+    mode: "0644"
+    remote_src: true
+
+- name: Set Powerlevel10k theme in .zshrc
+  ansible.builtin.lineinfile:
+    path: /home/{{ home_user }}/.zshrc
+    regexp: '^ZSH_THEME='
+    line: 'ZSH_THEME="powerlevel10k/powerlevel10k"'
