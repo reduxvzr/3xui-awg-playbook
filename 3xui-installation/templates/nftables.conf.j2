@@ -1,0 +1,36 @@
+#!/usr/sbin/nft -f
+
+flush ruleset
+
+table inet FIREWALL {
+        chain INPUT {
+                type filter hook input priority filter; policy drop;
+                tcp dport {{ ansible_port }} log prefix "SSH traffic: " counter accept
+                iif "lo" accept
+                ct state established,related accept
+                ct state invalid log counter drop
+                icmp type { destination-unreachable, router-advertisement, router-solicitation, time-exceeded, parameter-problem } accept
+                ip protocol igmp accept
+                icmp type echo-request limit rate 4/second accept
+                icmp type echo-request drop
+                tcp dport { 443, 2053 } jump WEB
+                tcp dport 53 jump DNS
+                udp dport 53 jump DNS
+                log
+        }
+
+        chain WEB {
+                tcp dport 443 log prefix "Secure traffic: " counter accept
+                tcp dport 2053 log prefix "3X-UI WEB traffic: " counter accept
+        }
+
+        chain DNS {
+                tcp dport 53 counter log prefix "Domain Name System: " accept
+                udp dport 53 counter log prefix "Domain Name System: " accept
+        }
+        chain PREROUTING {
+                type nat hook prerouting priority dstnat; policy accept;
+                tcp dport {{ web_port }} redirect to 2053
+                tcp dport 2053 drop
+        }
+}

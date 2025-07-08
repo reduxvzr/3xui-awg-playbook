@@ -2,7 +2,10 @@
 - name: Install necessary soft
   ansible.builtin.apt:
     pkg:
+      - apt-transport-https
       - arp-scan
+      - ca-certificates
+      - curl
       - curl
       - fail2ban
       - fd-find
@@ -16,11 +19,13 @@
       - net-tools
       - nmap
       - plocate
+      - software-properties-common
       - sudo
       - trash-cli
       - tree
       - unzip
       - vim
+      - virtualenv
       - wget
       - zsh
     update_cache: true

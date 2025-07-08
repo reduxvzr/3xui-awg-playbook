@@ -1,3 +1,11 @@
 ---
 # vars file for 3xui-installation
 home_user: vdsuser
+
+# 3xui-port
+web_port: 9100
+
+# fail2ban rules
+fail2ban_bantime: 600  # время бана
+fail2ban_findtime: 600 # частота бана
+fail2ban_maxretry: 5   # число неудачных попыток

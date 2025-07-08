@@ -12,6 +12,6 @@
   tags: zsh
   ansible.builtin.import_tasks: zsh.yml
 
-- name: 3xui
+- name: 3X-UI
   tags: 3xui
   ansible.builtin.import_tasks: 3xui.yml

@@ -13,6 +13,7 @@
     state: directory
     owner: root
     group: root
+    mode: "0755"
 
 - name: Unzip downloaded fonts
   ansible.builtin.unarchive:
@@ -26,16 +27,17 @@
 
 - name: Check OMZ folder
   ansible.builtin.stat:
-    path: "/home/{{home_user}}/.oh-my-zsh"
+    path: "/home/{{ home_user }}/.oh-my-zsh"
   register: omz_folder
 
 - name: Get Oh-My-ZSH
   become: true
   become_user: "{{ home_user }}"
   ansible.builtin.shell: |
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh) --unattended"
   register: omz_result
   when: not omz_folder.stat.exists
+  changed_when: false
 
 - name: OMZ output
   ansible.builtin.debug:
@@ -47,17 +49,40 @@
     dest: /home/{{ home_user }}/.oh-my-zsh/custom/themes/powerlevel10k
     update: true
 
-- name: Create zshrc file
-  ansible.builtin.copy:
-    src: /root/.zshrc
-    dest: "/home/{{ home_user }}/.zshrc"
-    owner: "{{ home_user }}"
-    group: "{{ home_user }}"
-    mode: "0644"
-    remote_src: true
-
 - name: Set Powerlevel10k theme in .zshrc
   ansible.builtin.lineinfile:
     path: /home/{{ home_user }}/.zshrc
     regexp: '^ZSH_THEME='
     line: 'ZSH_THEME="powerlevel10k/powerlevel10k"'
+
+- name: Copy files for root
+  block:
+    - name: Copy .zshrc
+      ansible.builtin.copy:
+        remote_src: true
+        src: "/home/{{ home_user }}/.zshrc"
+        dest: /root/.zshrc
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Copy .oh-my-zsh
+      ansible.builtin.copy:
+        remote_src: true
+        src: "/home/{{ home_user }}/.oh-my-zsh"
+        dest: /root/
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Copy powerlevel10k
+      ansible.builtin.copy:
+        remote_src: true
+        src: /home/{{ home_user }}/.oh-my-zsh/custom/themes/powerlevel10k
+        dest: /root/.oh-my-zsh/custom/themes/powerlevel10k
+        mode: "0755"
+
+- name: Change shell for root
+  ansible.builtin.user:
+    name: root
+    shell: /bin/zsh

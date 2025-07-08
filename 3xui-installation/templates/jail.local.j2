@@ -1,0 +1,17 @@
+[DEFAULT]
+bantime  = {{ fail2ban_bantime }}
+findtime  = {{ fail2ban_findtime }}
+maxretry = {{ fail2ban_maxretry }}
+allowipv6 = true
+[sshd]
+enabled = true
+port = {{ ansible_port }}
+filter = sshd
+logpath = /var/log/sshd/sshd.log
+[web]
+enabled = true
+filter = http-get-dos
+port = {{ web_port }}
+filter = sshd
+action = iptables-multiport[name=sshd, port=ssh, protocol=tcp]
+logpath = /var/log/3xui_jail.log

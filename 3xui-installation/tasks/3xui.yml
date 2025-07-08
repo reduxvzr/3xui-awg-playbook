@@ -1,3 +1,73 @@
-- name: Install 3xui
-  ansible.builtin.shell: bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh)
-  changed_when: false
+- name: Add Docker GPG apt Key
+  ansible.builtin.apt_key:
+    url: 'https://download.docker.com/linux/{{ distribution }}/gpg'
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Add Docker Repository
+  ansible.builtin.apt_repository:
+    repo: 'deb https://download.docker.com/linux/{{ distribution }} {{ ansible_distribution_release }} stable'
+    state: present
+
+- name: Update apt and install Docker packages
+  ansible.builtin.apt:
+    name:
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-ce
+      - docker-ce-cli
+      - docker-compose-plugin
+    state: present
+    update_cache: true
+  when: ansible_os_family == "Debian"
+
+- name: Add user to the Docker group
+  ansible.builtin.user:
+    name: "{{ home_user }}"
+    groups: docker
+    append: true
+
+- name: Docker compose up
+  tags: docker-compose
+  block:
+    - name: Create dir for containing 3xui configuration
+      ansible.builtin.file:
+        dest: /mnt/docker/3xui
+        state: directory
+        owner: '{{ home_user }}'
+        group: '{{ home_user }}'
+        mode: '0755'
+
+    - name: Copy docker-compose file
+      ansible.builtin.template:
+        src: docker-compose.yaml.j2
+        dest: /mnt/docker/3xui/docker-compose.yaml
+        owner: '{{ home_user }}'
+        group: '{{ home_user }}'
+        mode: '0644'
+
+    - name: Up container
+      community.docker.docker_compose_v2:
+        project_src: /mnt/docker/3xui
+      register: docker_output
+
+    - name: Show container status
+      ansible.builtin.debug:
+        var: docker_output
+
+    - name: Wait until 3x-ui container is running
+      community.docker.docker_container_info:
+        name: 3xui
+      register: container_info
+      until: container_info.container.State.Status == 'running'
+      retries: 30
+      delay: 5
+
+
+- name: Close 3X-UI web port
+  ansible.builtin.lineinfile:
+    path: /etc/nftables.conf
+    regexp: 'tcp dport 9100.*'
+    line: 'tcp dport 9100 log prefix "Attempt accessing to close 9100 port: " counter drop'
+  notify: Reload nftables
+  tags: never, close-port

@@ -1,4 +1,13 @@
 ---
+- name: Distribution
+  ansible.builtin.debug:
+    var: '{{ ansible_distribution }}'
+  register: distribution
+
+- name: Set Lowercase Distribution Variable
+  ansible.builtin.set_fact:
+    distribution: "{{ ansible_distribution | lower }}"
+
 - name: Add group for user
   ansible.builtin.group:
     name: vpsuser
@@ -16,8 +25,8 @@
 - name: SSH setup
   block:
     - name: Copy ssh file
-      ansible.builtin.copy:
-        src: sshd_config
+      ansible.builtin.template:
+        src: sshd_config.j2
         dest: /etc/ssh/sshd_config
         owner: root
         group: root
@@ -46,3 +55,45 @@
   ansible.builtin.apt:
     name: ufw
     state: absent
+
+- name: Nftables setup
+  tags: nftables
+  block:
+    - name: Ensure that nftables package is installed
+      ansible.builtin.apt:
+        name: nftables
+        state: present
+        update_cache: true
+
+    - name: Copy configuration file
+      ansible.builtin.template:
+        src: nftables.conf.j2
+        dest: /etc/nftables.conf
+        mode: '0751'
+        owner: root
+        group: root
+
+    - name: Start and enable nftables service
+      ansible.builtin.service:
+        name: nftables
+        state: restarted
+        enabled: true
+
+- name: Fail2ban setup
+  tags: fail2ban
+  block:
+    - name: Config fail2ban
+      ansible.builtin.template:
+        src: jail.local.j2
+        dest: /etc/fail2ban/jail.local
+        owner: root
+        group: root
+        mode: '0644'
+      notify:
+        - Restart fail2ban
+
+    - name: Start and autostart fail2ban
+      ansible.builtin.service:
+        name: fail2ban
+        state: started
+        enabled: true
