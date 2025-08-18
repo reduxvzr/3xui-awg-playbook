@@ -8,19 +8,22 @@
   ansible.builtin.set_fact:
     distribution: "{{ ansible_distribution | lower }}"
 
+- name: Set web_port and home_user as facts
+  ansible.builtin.set_fact:
+    web_port: "{{ web_port }}"
+    home_user: "{{ home_user }}"
+
 - name: Add group for user
   ansible.builtin.group:
-    name: vpsuser
+    name: "{{ home_user }}"
     state: present
-    gid: 1001
 
 - name: Add home user
   ansible.builtin.user:
     name: "{{ home_user }}"
     shell: /bin/zsh
     create_home: true
-    uid: 1001
-    groups: vpsuser,sudo
+    groups: sudo,{{ home_user }}
 
 - name: SSH setup
   block:

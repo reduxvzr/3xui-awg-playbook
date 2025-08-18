@@ -28,7 +28,7 @@
     append: true
 
 - name: Docker compose up
-  tags: docker-compose
+  tags: 3xui-docker-compose
   block:
     - name: Create dir for containing 3xui configuration
       ansible.builtin.file:
@@ -62,7 +62,6 @@
       until: container_info.container.State.Status == 'running'
       retries: 30
       delay: 5
-
 
 - name: Close 3X-UI web port
   ansible.builtin.lineinfile:

@@ -16,6 +16,8 @@ table inet FIREWALL {
                 tcp dport { 443, 2053 } jump WEB
                 tcp dport 53 jump DNS
                 udp dport 53 jump DNS
+                udp dport {{ awg_port }} jump WIREGUARD
+                tcp dport {{ awgui_port }} jump WIREGUARD
                 log
         }
 
@@ -32,5 +34,9 @@ table inet FIREWALL {
                 type nat hook prerouting priority dstnat; policy accept;
                 tcp dport {{ web_port }} redirect to 2053
                 tcp dport 2053 drop
+        }
+        chain WIREGUARD {
+                udp dport {{ awg_port }} accept
+                tcp dport {{ awgui_port }} drop
         }
 }

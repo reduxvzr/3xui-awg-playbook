@@ -1,0 +1,47 @@
+---
+- name: Change nftables config
+  ansible.builtin.import_tasks: nftables.yml
+
+- name: Get password hash
+  ansible.builtin.import_tasks: get_hash.yml
+
+- name: Docker compose up
+  tags: amnezia-docker-compose
+  become: true
+  block:
+    - name: Create dir for containing amneziawg-easy configuration
+      ansible.builtin.file:
+        dest: /mnt/docker/amneziawg-easy
+        state: directory
+        owner: '{{ home_user }}'
+        group: '{{ home_user }}'
+        mode: '0755'
+
+    - name: Copy docker-compose file
+      ansible.builtin.template:
+        src: docker-compose.yaml.j2
+        dest: /mnt/docker/amneziawg-easy/docker-compose.yaml
+        owner: '{{ home_user }}'
+        group: '{{ home_user }}'
+        mode: '0644'
+
+    - name: Up container
+      community.docker.docker_compose_v2:
+        project_src: /mnt/docker/amneziawg-easy
+      register: docker_output
+
+    - name: Show container status
+      ansible.builtin.debug:
+        var: docker_output
+
+    - name: Sleep before checking
+      ansible.builtin.sleep:
+        delta: 30
+
+    - name: Wait until amneziawg-easy container is running
+      community.docker.docker_container_info:
+        name: amneziawg-easy
+      register: container_info
+      until: container_info.container.State.Status == 'running'
+      retries: 30
+      delay: 5

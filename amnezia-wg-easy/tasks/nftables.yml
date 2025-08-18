@@ -1,0 +1,16 @@
+- name: Nftables setup
+  tags: nftables
+  block:
+    - name: Copy configuration file
+      ansible.builtin.template:
+        src: nftables.conf.j2
+        dest: /etc/nftables.conf
+        mode: '0751'
+        owner: root
+        group: root
+
+    - name: Start and enable nftables service
+      ansible.builtin.service:
+        name: nftables
+        state: restarted
+        enabled: true

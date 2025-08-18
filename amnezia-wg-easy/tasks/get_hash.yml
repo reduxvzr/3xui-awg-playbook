@@ -1,0 +1,20 @@
+---
+- name: Container present
+  community.docker.docker_container:
+    name: amnezia-wgpw
+    state: started
+    image: ghcr.io/reduxvzr/amnezia-wg-easy
+    command: wgpw '{{ password_ui }}'
+    detach: false
+    cleanup: true
+    tty: true
+    interactive: true
+  register: container_result
+
+- name: Extract password hash
+  ansible.builtin.set_fact:
+    password_hash: "{{ container_result.container.Output | regex_search(\"'([^']*)'\") | regex_replace(\"'([^']*)'\", '\\1') | regex_replace('\\$', '$$') }}"
+
+- name: Debug extracted hash
+  ansible.builtin.debug:
+    msg: '{{ password_hash }}'

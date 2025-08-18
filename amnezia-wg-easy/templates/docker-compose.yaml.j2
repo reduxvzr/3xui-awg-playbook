@@ -1,0 +1,33 @@
+---
+services:
+  amnezia-wg-go-easy:
+    environment:
+      LANGUAGE: en
+      WG_HOST: {{ ansible_host }}
+      WG_PORT: {{ awg_port }}
+      PORT: {{ awgui_port }}
+      WG_DEFAULT_DNS: 8.8.8.8
+      PASSWORD_HASH: {{ password_hash }}
+      USE_GRAVATAR: true
+      UI_TRAFFIC_STATS: true
+      UI_CHART_TYPE: 1
+      MAX_AGE: 15
+      JC: {{ jc |default(4) }}
+      JMIN: {{ jmin |default(50) }}
+      JMAX: {{ jmax |default(500) }}
+      S1: {{ s1 |default(75) }}
+      S2: {{ s2 |default(75) }}
+    network_mode: host
+    image: ghcr.io/reduxvzr/amnezia-wg-easy
+    container_name: amnezia-wg-go-easy
+    volumes:
+      - etc_wireguard:/etc/amnezia/amneziawg
+    restart: always
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    devices:
+      - /dev/net/tun:/dev/net/tun
+
+volumes:
+  etc_wireguard:
