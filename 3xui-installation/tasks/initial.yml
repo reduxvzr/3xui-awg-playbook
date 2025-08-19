@@ -8,11 +8,6 @@
   ansible.builtin.set_fact:
     distribution: "{{ ansible_distribution | lower }}"
 
-- name: Set web_port and home_user as facts
-  ansible.builtin.set_fact:
-    web_port: "{{ web_port }}"
-    home_user: "{{ home_user }}"
-
 - name: Add group for user
   ansible.builtin.group:
     name: "{{ home_user }}"

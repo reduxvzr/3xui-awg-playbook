@@ -1,0 +1,60 @@
+---
+- name: Install caddy package
+  ansible.builtin.apt:
+    name: caddy
+    update_cache: true
+    state: present
+
+- name: Create directory for placeholder site
+  ansible.builtin.file:
+    dest: /usr/share/caddy/placeholder/
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Copy html placeholder file with amneziawg-easy site
+  ansible.builtin.copy:
+    src: placeholder.html
+    dest: /usr/share/caddy/placeholder/index.html
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Copy favicon file
+  ansible.builtin.copy:
+    src: favicon.png
+    dest: /usr/share/caddy/placeholder/favicon.ico
+    owner: caddy
+    group: caddy
+    mode: '0644'
+
+- name: Copy caddy conf with amneziawg-easy
+  ansible.builtin.template:
+    src: Caddyfile/Caddyfile_awg.j2
+    dest: /etc/caddy/Caddyfile
+    owner: root
+    group: root
+    mode: '0644'
+    validate: caddy validate --config /etc/caddy/Caddyfile %s
+  when: awg_creation is true
+  notify: "Restart Caddy"
+
+- name: Copy caddy conf without amneziawg-easy
+  ansible.builtin.template:
+    src: Caddyfile/Caddyfile_noawg.j2
+    dest: /etc/caddy/Caddyfile
+    owner: root
+    group: root
+    mode: '0644'
+    validate: caddy validate --config /etc/caddy/Caddyfile %s
+  when: awg_creation is false
+  notify: "Restart Caddy"
+
+- name: Get status of the caddy service
+  ansible.builtin.service_facts:
+
+- name: Debug caddy service status
+  ansible.builtin.debug:
+    msg: "Caddy service status: {{ ansible_facts.services['caddy.service'].state }}"
+  when: "'caddy.service' in ansible_facts.services"

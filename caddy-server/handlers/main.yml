@@ -1,0 +1,7 @@
+---
+# handlers file for caddy-server
+- name: Restart Caddy
+  ansible.builtin.systemd_service:
+    name: caddy.service
+    state: restarted
+    enabled: true

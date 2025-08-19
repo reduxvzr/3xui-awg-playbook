@@ -1,0 +1,18 @@
+---
+# 3xui Role Vars
+web_port: 6763
+home_user: your_home_user
+
+# amnezia-wg-easy Role Vars
+awg_port: 512820
+awg_creation: false
+awgui_port: 512821
+password_ui: y0ursEcurepAsswo0d
+jc: 3
+jmin: 40
+jmax: 70
+# s1: 50
+# s2: 50
+
+# caddy-server Role Vars
+domain: yourdomain.com

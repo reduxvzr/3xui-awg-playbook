@@ -1,18 +1,16 @@
 # Ansible playbook for 3X-UI Panel installation
 ---
 - name: Installation | 3X-UI
-  hosts: all
+  hosts: vpn_servers
   become: true
   remote_user: root
   gather_facts: true
-  vars:
-    web_port: 6763
-    home_user: your_home_user
   roles:
     - 3xui-installation
+    - caddy-server
 
 - name: Prompt for Amnezia VPN WebUI installation
-  hosts: all
+  hosts: vpn_servers
   become: true
   remote_user: root
   gather_facts: true
@@ -24,23 +22,24 @@
 
     - name: Fail if user chooses NO
       ansible.builtin.fail:
-        msg: "YouYE chose not to install Amnezia VPN WebUI. Stopping playbook."
+        msg: "You chose not to install Amnezia VPN WebUI. Stopping playbook."
       when: amnezia_wg_needed.user_input | default('NO') | upper == 'NO'
 
 - name: Installation | amnezia-wg-easy
-  hosts: all
+  hosts: vpn_servers
   become: true
   remote_user: root
   gather_facts: true
-  vars:
-    awg_port: 512820
-    awgui_port: 51821
-    password_ui: y0ursEcurepAsswo0d
-    jc: 3
-    jmin: 40
-    jmax: 70
-    # s1: 50
-    # s2: 50
   roles:
     - amnezia-wg-easy
+    - caddy-server
   tags: amnezia-wg-easy
+
+- name: Installation | Caddy web server
+  hosts: vpn_servers
+  become: true
+  remote_user: root
+  gather_facts: true
+  roles:
+    - caddy-server
+  tags: caddy-server

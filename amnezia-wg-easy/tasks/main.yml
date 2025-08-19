@@ -35,7 +35,7 @@
         var: docker_output
 
     - name: Sleep before checking
-      ansible.builtin.sleep:
+      ansible.builtin.pause:
         delta: 30
 
     - name: Wait until amneziawg-easy container is running
@@ -45,3 +45,7 @@
       until: container_info.container.State.Status == 'running'
       retries: 30
       delay: 5
+
+    - name: State the fact that amneziawg-easy has been started
+      ansible.builtin.set_fact:
+        awg_creation: true

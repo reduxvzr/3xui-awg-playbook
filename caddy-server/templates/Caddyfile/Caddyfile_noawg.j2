@@ -1,0 +1,30 @@
+# The Caddyfile is an easy way to configure your Caddy web server.
+#
+# Unless the file starts with a global options block, the first
+# uncommented line is always the address of your site.
+#
+# To use your own domain name (with automatic HTTPS), first make
+# sure your domain's A/AAAA DNS records are properly pointed to
+# this machine's public IP, then replace ":80" below with your
+# domain name.
+
+https://{{ domain }} {
+    root * /usr/share/caddy/placeholder
+    file_server
+
+    redir /3xui /3xui/
+
+    handle /3xui/* {
+        reverse_proxy localhost:{{ web_port }} {
+            header_up Host {http.request.host}
+            header_up X-Real-IP {http.request.remote.host}
+            header_up X-Forwarded-For {http.request.remote.host}
+            header_up X-Forwarded-Proto {http.request.scheme}
+
+            @redir header Location *
+            handle_response @redir {
+                header Location /3xui{http.response.header.Location}
+            }
+        }
+    }
+}
