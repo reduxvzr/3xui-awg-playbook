@@ -36,11 +36,11 @@
 
     - name: Sleep before checking
       ansible.builtin.pause:
-        delta: 30
+        seconds: 30
 
     - name: Wait until amneziawg-easy container is running
       community.docker.docker_container_info:
-        name: amneziawg-easy
+        name: amnezia-wg-go-easy
       register: container_info
       until: container_info.container.State.Status == 'running'
       retries: 30
