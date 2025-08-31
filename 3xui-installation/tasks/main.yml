@@ -8,6 +8,10 @@
   tags: initial
   ansible.builtin.import_tasks: initial.yml
 
+- name: DOH setup with dnscrypt-proxy
+  tags: dnscrypt-proxy
+  ansible.builtin.import_tasks: dnscrypt-proxy.yml
+
 - name: Oh My ZSH
   tags: zsh
   ansible.builtin.import_tasks: zsh.yml

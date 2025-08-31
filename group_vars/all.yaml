@@ -1,18 +1,46 @@
 ---
-# 3xui Role Vars
+#-------------------------- 3XUI vars --------------------------#
+
 web_port: 6763
 home_user: your_home_user
 
-# amnezia-wg-easy Role Vars
+#----------------------- AmneziaWG vars ------------------------#
+
+# Ports for WEB UI
 awg_port: 512820
-awg_creation: false
 awgui_port: 512821
+
+# Password for WEB UI
 password_ui: y0ursEcurepAsswo0d
+
+# AmneziaWG parameters: https://docs.amnezia.org/documentation/amnezia-wg/#configuration-parameters
 jc: 3
 jmin: 40
 jmax: 70
 # s1: 50
 # s2: 50
 
-# caddy-server Role Vars
+#-------------------- CADDY web server vars --------------------#
+
 domain: yourdomain.com
+
+# Create location in Caddyfile.conf for the AmneziaWG WEB UI. TRUE or FALSE
+awg_creation: false
+
+#-------------------- DNSCRYPT-PROXY vars ----------------------#
+
+dnscrypt_proxy_version: 2.1.13
+
+# DNS resolvers that will be disabled
+resolvers:
+  - systemd-resolved
+  - resolvconf
+  - cloudflared
+  - dnsmasq
+  - unbound
+  - dnscrypt-proxy
+  - dnscrypt-proxy.socket
+
+# Username|Password for dnscrypt WEB UI
+dnscrypt_username: your_Username
+dnscrypt_password: y0ursEcurepAsswo0d

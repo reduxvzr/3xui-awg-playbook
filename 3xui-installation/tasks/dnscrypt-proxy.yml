@@ -1,0 +1,143 @@
+---
+- name: Download dnscrypt-proxy
+  ansible.builtin.get_url:
+    url: "https://github.com/DNSCrypt/dnscrypt-proxy/releases/download/{{ dnscrypt_proxy_version }}/dnscrypt-proxy-linux_x86_64-{{ dnscrypt_proxy_version }}.tar.gz"
+    dest: /tmp/dnscrypt-proxy-linux_x86_64-{{ dnscrypt_proxy_version }}.tar.gz
+    mode: '0640'
+    owner: root
+    group: root
+    timeout: 15
+  register: dnscrypt_proxy_archive
+
+- name: Create directories for dnscrypt-proxy
+  ansible.builtin.file:
+    dest: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  loop:
+    - /opt/dnscrypt-proxy
+    - /opt/dnscrypt-proxy/filters
+
+- name: Extract dnscrypt-proxy archive
+  ansible.builtin.unarchive:
+    src: "{{ dnscrypt_proxy_archive.dest }}"
+    dest: /opt/dnscrypt-proxy
+    remote_src: true
+    extra_opts: "--strip-components=1"
+
+- name: Find example files to delete
+  ansible.builtin.find:
+    paths: /opt/dnscrypt-proxy
+    patterns: "example*"
+    file_type: file
+  register: example_files
+
+- name: Delete example files
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ example_files.files }}"
+
+- name: Copy dnscrypt-proxy files
+  ansible.builtin.template:
+    src: "{{ item }}"
+    dest: /opt/dnscrypt-proxy/
+    owner: root
+    group: root
+    mode: '0755'
+  loop:
+    - dnscrypt-proxy/dnscrypt-proxy.toml
+    - ../files/dnscrypt-proxy/get_filters.sh
+
+- name: Generate ad-blocking hosts file
+  ansible.builtin.shell: /opt/dnscrypt-proxy/get_filters.sh
+  args:
+    executable: /bin/bash
+  changed_when: false
+
+- name: Create cronjob to update filter hosts
+  ansible.builtin.lineinfile:
+    path: /etc/crontab
+    line: '0 */2   * * *   root    /opt/dnscrypt-proxy/get_filters.sh'
+    state: present
+    insertafter: EOF
+    backup: true
+
+- name: Try to disable most popular dns resolvers
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    enabled: false
+    state: stopped
+  loop: "{{ resolvers }}"
+  ignore_errors: true
+
+- name: Gather facts on listening ports
+  community.general.listen_ports_facts:
+
+- name: Get still running DNS resolver
+  ansible.builtin.debug:
+    msg: "{{ ansible_facts.udp_listen | selectattr('port', 'equalto', 53) | selectattr('address', 'equalto', '127.0.0.1') }}"
+  register: running_resolver
+
+- name: Create dnscrypt-proxy.service
+  when: running_resolver.msg | length == 0
+  block:
+    - name: Copy dnscrypt-proxy.service
+      ansible.builtin.copy:
+        src: dnscrypt-proxy/dnscrypt-proxy.service
+        dest: /usr/lib/systemd/system/dnscrypt-proxy.service
+        owner: root
+        group: root
+        mode: '0755'
+    - name: Start and enable dnscrypt-proxy.service
+      ansible.builtin.systemd_service:
+        name: dnscrypt-proxy
+        state: restarted
+        enabled: true
+        daemon_reload: true
+
+- name: Modification of resolv.conf
+  block:
+    - name: Backup resolv.conf file
+      ansible.builtin.copy:
+        src: /etc/resolv.conf
+        dest: /etc/resolv.conf.bak
+        remote_src: true
+        owner: root
+        group: root
+        mode: '0644'
+    - name: Delete old resolv.conf
+      ansible.builtin.file:
+        path: /etc/resolv.conf
+        state: absent
+    - name: Ensure resolv.conf is a regular file
+      ansible.builtin.file:
+        path: /etc/resolv.conf
+        state: touch
+        owner: root
+        group: root
+        mode: '0644'
+    - name: Change resolv.conf
+      ansible.builtin.blockinfile:
+        path: /etc/resolv.conf
+        append_newline: true
+        block: |
+          nameserver 127.0.0.1
+          options edns0
+        state: present
+        backup: true
+        create: true
+        owner: root
+        group: root
+        mode: '0644'
+
+- name: Check dnscrypt-proxy process
+  ansible.builtin.shell: /opt/dnscrypt-proxy/dnscrypt-proxy -resolve youtube.com
+  changed_when: false
+  register: resolve_output
+
+- name: Show resolve result
+  ansible.builtin.debug:
+    msg: "{{ resolve_output.stdout_lines }}"
