@@ -7,8 +7,8 @@ home_user: your_home_user
 #----------------------- AmneziaWG vars ------------------------#
 
 # Ports for WEB UI
-awg_port: 512820
-awgui_port: 512821
+awg_port: 51820
+awgui_port: 51821
 
 # Password for WEB UI
 password_ui: y0ursEcurepAsswo0d
