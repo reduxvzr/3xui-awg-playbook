@@ -22,14 +22,16 @@ jmax: 70
 
 #-------------------- CADDY web server vars --------------------#
 
-domain: yourdomain.com
+domain: resolveconflicts91.myaddr.io
 
 # Create location in Caddyfile.conf for the AmneziaWG WEB UI. TRUE or FALSE
-awg_creation: false
+awg_creation: true
 
 #-------------------- DNSCRYPT-PROXY vars ----------------------#
 
-dnscrypt_proxy_version: 2.1.13
+dnscrypt_proxy_version: 2.1.15
+# arm64, x86, x86_64
+dnscrypt_proxy_arch: x86_64
 
 # DNS resolvers that will be disabled
 resolvers:

@@ -1,9 +1,4 @@
 ---
-- name: Distribution
-  ansible.builtin.debug:
-    var: '{{ ansible_distribution }}'
-  register: distribution
-
 - name: Set Lowercase Distribution Variable
   ansible.builtin.set_fact:
     distribution: "{{ ansible_distribution | lower }}"

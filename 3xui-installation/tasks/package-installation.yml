@@ -1,4 +1,5 @@
 ---
+# task for apt upgrade
 - name: Install necessary soft
   ansible.builtin.apt:
     pkg:
@@ -7,6 +8,7 @@
       - ca-certificates
       - curl
       - curl
+      - dnsutils
       - dos2unix
       - fail2ban
       - fd-find
@@ -16,11 +18,11 @@
       - hwinfo
       - iftop
       - iputils-tracepath
+      - jq
       - ncdu
       - net-tools
       - nmap
       - plocate
-      - software-properties-common
       - sudo
       - trash-cli
       - tree

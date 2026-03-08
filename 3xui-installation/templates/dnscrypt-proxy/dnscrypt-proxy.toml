@@ -16,7 +16,7 @@
 
 server_names = ['comss.one', 'mullvad-base-doh', 'quad9-dnscrypt-ip4-filter-pri', 'quad9-doh-ip4-port443-filter-pri', 'adguard-dns-doh']
 
-listen_addresses = ['0.0.0.0:53']
+listen_addresses = ['127.0.0.1:53']
 
 max_clients = 100
 
